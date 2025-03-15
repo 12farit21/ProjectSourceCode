@@ -142,24 +142,45 @@ class Hotel(models.Model):
         rating_count = Review.objects.filter(hotel=self, active=True).count()
         return rating_count
     
+
+
 class HotelGallery(models.Model):
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
     image = models.FileField(upload_to="hotel_gallery")
-    hgid = ShortUUIDField(unique=True, length=10, max_length=20, alphabet="abcdefghijklmnopqrstuvxyz")
+    hgid = models.CharField(max_length=20,blank=True)
+
+    def save(self, *args, **kwargs):
+        # Генерация уникального hgid, если оно отсутствует
+        if not self.hgid:
+            self.hgid = shortuuid.uuid()[:10]
+
+        while HotelGallery.objects.filter(hgid=self.hgid).exists():
+            self.hgid = shortuuid.uuid()[:10]  # Regenerate if it already exists
+    
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return str(self.hotel)
 
     class Meta:
         verbose_name_plural = "Hotel Gallery"
-    
 
 class HotelFeatures(models.Model):
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
     # icon_type = models.CharField(max_length=100, null=True, blank=True, choices=ICON_TPYE)
     icon = models.CharField(max_length=100, null=True, blank=True)
     name = models.CharField(max_length=100)
-    hfid = ShortUUIDField(unique=True, length=10, max_length=20, alphabet="abcdefghijklmnopqrstuvxyz")
+    hfid = models.CharField(max_length=20,blank=True)
+
+    def save(self, *args, **kwargs):
+        # Генерация уникального hfid, если оно отсутствует
+        if not self.hfid:
+            self.hfid = shortuuid.uuid()[:10]
+
+        while HotelFeatures.objects.filter(hfid=self.hfid).exists():
+            self.hfid = shortuuid.uuid()[:10]  # Regenerate if it already exists
+    
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return str(self.hotel)
@@ -172,7 +193,18 @@ class HotelFAQs(models.Model):
     question = models.CharField(max_length=1000)
     answer = models.TextField(null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
-    hfid = ShortUUIDField(unique=True, length=10, max_length=20, alphabet="abcdefghijklmnopqrstuvxyz")
+    hfid = models.CharField(max_length=20,blank=True)
+
+    def save(self, *args, **kwargs):
+        # Генерация уникального hfid, если оно отсутствует
+        if not self.hfid:
+            self.hfid = shortuuid.uuid()[:10]
+
+        while HotelFAQs.objects.filter(hfid=self.hfid).exists():
+            self.hfid = shortuuid.uuid()[:10]  # Regenerate if it already exists
+    
+        super().save(*args, **kwargs)
+
 
     def __str__(self):
         return str(self.hotel)
@@ -187,8 +219,8 @@ class RoomType(models.Model):
     number_of_beds = models.PositiveIntegerField(default=0)
     room_capacity = models.PositiveIntegerField(default=0)
     room_size = models.IntegerField(default=0, verbose_name="Room size (m²)")
-    rtid = ShortUUIDField(unique=True, length=10, max_length=20, alphabet="abcdefghijklmnopqrstuvxyz")
-    slug = models.SlugField(null=True, blank=True)
+    rtid = models.CharField(max_length=20,blank=True)
+    slug = models.SlugField(null=True, blank=True,unique=True)
     date = models.DateTimeField(auto_now_add=True)
     
 
@@ -203,7 +235,14 @@ class RoomType(models.Model):
             uuid_key = shortuuid.uuid()
             uniqueid = uuid_key[:4]
             self.slug = slugify(self.type) + "-" + str(uniqueid.lower())
-            
+
+        # Генерация уникального rtid, если оно отсутствует
+        if not self.rtid:
+            self.rtid = shortuuid.uuid()[:10]
+
+        while RoomType.objects.filter(rtid=self.rtid).exists():
+            self.rtid = shortuuid.uuid()[:10]  # Regenerate if it already exists
+    
         super(RoomType, self).save(*args, **kwargs) 
 
 class RoomTypeDescription(models.Model):
@@ -232,7 +271,18 @@ class RoomTypeFeatures(models.Model):
     room_type = models.ForeignKey(RoomType, on_delete=models.CASCADE, related_name='roomtype_features')
     icon = models.CharField(max_length=100, null=True, blank=True)
     name = models.CharField(max_length=100)
-    hfid = ShortUUIDField(unique=True, length=10, max_length=20, alphabet="abcdefghijklmnopqrstuvxyz")
+    hfid = models.CharField(max_length=20,blank=True)
+
+    def save(self, *args, **kwargs):
+        # Генерация уникального hfid, если оно отсутствует
+        if not self.hfid:
+            self.hfid = shortuuid.uuid()[:10]
+
+        while RoomTypeFeatures.objects.filter(hfid=self.hfid).exists():
+            self.hfid = shortuuid.uuid()[:10]  # Regenerate if it already exists
+    
+        super().save(*args, **kwargs)
+
 
     def __str__(self):
         return str(self.hotel)
@@ -245,8 +295,19 @@ class Room(models.Model):
     room_type = models.ForeignKey(RoomType, on_delete=models.CASCADE)
     room_number = models.CharField(max_length=10)
     is_available = models.BooleanField(default=True)
-    rid = ShortUUIDField(unique=True, length=10, max_length=20, alphabet="abcdefghijklmnopqrstuvxyz")
+    rid = models.CharField(max_length=20,blank=True)
     date = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        # Генерация уникального rid, если оно отсутствует
+        if not self.rid:
+            self.rid = shortuuid.uuid()[:10]
+
+        while Room.objects.filter(rid=self.rid).exists():
+            self.rid = shortuuid.uuid()[:10]  # Regenerate if it already exists
+    
+        super().save(*args, **kwargs)
+
 
     def __str__(self):
         return f"{self.hotel.name} - {self.room_type.type} -  Room {self.room_number}"
